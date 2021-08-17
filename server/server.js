@@ -2,6 +2,7 @@ const express = require('express')
 const { ApolloServer } = require('apollo-server-express')
 const { typeDefs } = require('./schemas/typeDefs')
 const { resolvers } = require('./schemas/resolvers')
+require('dotenv').config()
 const db = require('./config/connection')
 
 // app.get('/', (req, res) => res.send('server running..'))

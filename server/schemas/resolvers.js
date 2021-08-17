@@ -1,21 +1,30 @@
 const axios = require('axios')
 require('dotenv').config()
 
-// numbeo cost of living
-// https://www.numbeo.com/api/indices?api_key=g1qic1xvvmr7h7&query=memphis
-
-//cost of prices
-//https://www.numbeo.com/api/city_prices?api_key=g1qic1xvvmr7h7&query=memphis
-
-//ziprecruiter
-// https://api.ziprecruiter.com/jobs/v1?search=frontend&location=sanfrancisco&radius_miles=50&days_ago=25&jobs_per_page=25&page=1&api_key=uh89jdqrc52qqaef6hwr7cme9gqpui74
-
 const numbeoKey = process.env.NUMBEO_KEY
 const zipKey = process.env.ZIP_RECRUITER_KEY
 
 const resolvers = {
+  ZipRecruiter: {
+    // resolve field of HiringCompany
+    hiring_company: (parent) => {
+      return parent.hiring_company
+    },
+  },
+  CostOfLiving: {
+    // resolve field of Itemprices
+    prices: (parent) => {
+      return parent.prices
+    },
+    jobs: (parent) => {
+      return parent.jobs
+    },
+  },
   Query: {
-    getCostOfLiving: async (parent, { city }) => {
+    getCostOfLiving: async (
+      parent,
+      { city, search, radius, daysAgo, page }
+    ) => {
       try {
         // numbeo api for cost of living indices in each city
         const costOfLivingIndex = axios.get(
@@ -26,27 +35,30 @@ const resolvers = {
         const itemPrices = axios.get(
           `https://www.numbeo.com/api/city_prices?api_key=${numbeoKey}&query=${city}`
         )
+        // ziprecruiter api for jobs
+        // TODO: should probably cache cost of living and item prices if they call different page with same parameters
+        const zipRecruiterJobs = axios.get(
+          `https://api.ziprecruiter.com/jobs/v1?search=${search}&location=${city}&radius_miles=${radius}&days_ago=${daysAgo}&jobs_per_page=25&page=${page}&api_key=${zipKey}`
+        )
 
-        // wait for reponses into index and prices
-        const [index, prices] = await Promise.all([
+        // wait for promise reponses into index, prices, and jobs
+        const [index, prices, jobs] = await Promise.all([
           costOfLivingIndex,
           itemPrices,
+          zipRecruiterJobs,
         ])
 
         // normalize data into fields
         return {
           cpi_and_rent_index: index.data.cpi_and_rent_index,
           prices: prices.data.prices,
+          jobs: jobs.data.jobs,
+          total_jobs: jobs.data.total_jobs,
+          num_paginable_jobs: jobs.data.num_paginable_jobs,
         }
       } catch (error) {
         console.log(error)
       }
-    },
-  },
-  CostOfLiving: {
-    // resolve field of Itemprices
-    prices: (parent) => {
-      return parent.prices
     },
   },
 }

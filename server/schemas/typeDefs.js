@@ -1,6 +1,15 @@
 const { gql } = require('apollo-server-express')
 
 const typeDefs = gql`
+  type HiringCompany {
+    name: String
+
+    #//////// the fields below usually return null most of the time/////////////
+    # id: String
+    # description: String
+    # url: String
+  }
+
   type ItemPrices {
     data_points: Int
     item_id: Int
@@ -10,9 +19,46 @@ const typeDefs = gql`
     item_name: String
   }
 
+  type ZipRecruiter {
+    name: String
+    salary_min: Int
+    salary_min_annual: Int
+    id: String
+    location: String
+    posted_time_friendly: String
+    industry_name: String
+    city: String
+    source: String
+    url: String
+    buyer_type: String
+    category: String
+    country: String
+    salary_source: String
+    hiring_company: HiringCompany
+    snippet: String
+    posted_time: String
+    salary_max: Int
+    has_zipapply: Boolean
+    state: String
+    salary_max_annual: Int
+    job_age: Int
+    salary_interval: String
+  }
+
   type CostOfLiving {
+    #numbeo indices api
     cpi_and_rent_index: Float
+
+    #numbeo item prices api
     prices: [ItemPrices]
+
+    #ziprcruiter api
+    total_jobs: Int
+    num_paginable_jobs: Int
+    jobs: [ZipRecruiter]
+
+    #////////////////numbeo indices api//////////////////
+
     # crime_index: Float
     # purchasing_power_incl_rent_index: Float
     # property_price_to_income_ratio: Float
@@ -40,7 +86,13 @@ const typeDefs = gql`
   }
 
   type Query {
-    getCostOfLiving(city: String!): CostOfLiving
+    getCostOfLiving(
+      city: String!
+      search: String!
+      radius: String!
+      daysAgo: String!
+      page: String!
+    ): CostOfLiving
   }
 `
 module.exports = { typeDefs }
