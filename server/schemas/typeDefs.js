@@ -1,9 +1,18 @@
 const { gql } = require('apollo-server-express')
+const { authMiddleware } = require('../middleware/authMiddleware')
 
 const typeDefs = gql`
+  type User {
+    email: String
+    password: String
+  }
+
+  type LoginResponse {
+    accessToken: String
+  }
+
   type HiringCompany {
     name: String
-
     #//////// the fields below usually return null most of the time/////////////
     # id: String
     # description: String
@@ -93,6 +102,11 @@ const typeDefs = gql`
       daysAgo: String!
       page: String!
     ): CostOfLiving
+    getMe: User
+  }
+  type Mutation {
+    register(email: String!, password: String!): User
+    login(email: String!, password: String!): LoginResponse
   }
 `
 module.exports = { typeDefs }

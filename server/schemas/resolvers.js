@@ -1,5 +1,11 @@
 const axios = require('axios')
 require('dotenv').config()
+const User = require('../models/User')
+const {
+  createAccessToken,
+  createRefreshToken,
+  sendRefreshToken,
+} = require('../utils/auth')
 
 const numbeoKey = process.env.NUMBEO_KEY
 const zipKey = process.env.ZIP_RECRUITER_KEY
@@ -58,6 +64,41 @@ const resolvers = {
         }
       } catch (error) {
         console.log(error)
+      }
+    },
+    getMe: async (parent, args, { decoded }) => {
+      //get decoded id from authmiddleware context
+      if (decoded.id) {
+        const user = await User.findOne({ _id: decoded.id }).select(
+          '-__v -password'
+        )
+        return user
+      }
+    },
+  },
+  Mutation: {
+    register: async (parent, { email, password }) => {
+      try {
+        const user = await User.create({ email, password })
+        return user
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    login: async (parent, { email, password }, { req, res }) => {
+      const user = await User.findOne({ email }).select('+password') //grab password
+
+      if (!user) throw new Error('user does not exist')
+
+      const validUser = await user.matchPassword(password)
+
+      if (!validUser) throw new Error('invalid password')
+
+      //login success
+      sendRefreshToken(res, createRefreshToken(user))
+
+      return {
+        accessToken: createAccessToken(user),
       }
     },
   },
