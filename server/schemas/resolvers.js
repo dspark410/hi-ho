@@ -77,7 +77,7 @@ const resolvers = {
     },
   },
   Mutation: {
-    register: async (parent, { email, password }) => {
+    signup: async (parent, { email, password }) => {
       try {
         const user = await User.create({ email, password })
         return user

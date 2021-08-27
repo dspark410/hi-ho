@@ -13,9 +13,12 @@ const {
   createRefreshToken,
   sendRefreshToken,
 } = require('./utils/auth')
+const cors = require('cors')
 
 const PORT = process.env.PORT || 5000
 const app = express()
+
+app.use(cors({ credentials: true, origin: 'http://localhost:3000' }))
 app.use(cookieParser())
 
 app.post('/refresh_token', async (req, res) => {
@@ -59,12 +62,12 @@ const startApolloServer = async () => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    context: authMiddleware,
+    context: ({ req, res }) => ({ req, res }),
   })
 
   await server.start()
 
-  server.applyMiddleware({ app })
+  server.applyMiddleware({ app, cors: false })
 
   db.once('open', () => {
     app.listen(PORT, () => {
